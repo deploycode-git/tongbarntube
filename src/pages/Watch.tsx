@@ -64,40 +64,44 @@ export default function Watch() {
   const handlePlayFromQueue = useCallback((video: Video) => {
     removeFromQueue(video.id);
     addToHistory(video);
-    navigate(`/watch/${video.id}`);
+    // Clear playlist query param if video doesn't have one
+    if (video.playlistId) {
+      navigate(`/watch/${video.id}?list=${video.playlistId}`);
+    } else {
+      navigate(`/watch/${video.id}`);
+    }
   }, [removeFromQueue, addToHistory, navigate]);
 
   const handlePlayerVideoPlay = useCallback((playedVideoId: string) => {
-    // Auto-save to history whenever any video starts playing in the player
-    // We need to construct a partial video object or just pass ID if possible, 
-    // but addToHistory needs a full object.
+    // This is called when the YT player advances to a new video (playlist autoplay)
+    // We need to update the URL to match
 
-    // Check if we are potentially in a loop or redundant update
-    // If the playedVideoId matches the current videoId in URL, we assume currentPlayingVideo is valid.
-
-    if (playedVideoId === videoId && currentPlayingVideo) {
-      // Only add if it's not the most recent one to avoid duplicates/spam (useHistory handles ID dedup but still updates timestamp)
-      addToHistory(currentPlayingVideo);
-    } else {
-      // It's a next video from playlist/autoplay.
+    // Only navigate if it's actually different from current URL
+    if (playedVideoId !== videoId) {
       const autoVideo: Video = {
         id: playedVideoId,
         thumbnail: getVideoThumbnail(playedVideoId),
         url: `https://youtube.com/watch?v=${playedVideoId}`,
-        // playlistId: playlistId, // maybe preserve playlist context?
+        playlistId: playlistId || undefined,
         addedAt: Date.now(),
       };
       addToHistory(autoVideo);
 
-      if (playedVideoId !== videoId) {
-        if (playlistId) {
-          navigate(`/watch/${playedVideoId}?list=${playlistId}`, { replace: true });
-        } else {
-          navigate(`/watch/${playedVideoId}`, { replace: true });
-        }
+      // Update URL to match playing video
+      if (playlistId) {
+        navigate(`/watch/${playedVideoId}?list=${playlistId}`, { replace: true });
+      } else {
+        navigate(`/watch/${playedVideoId}`, { replace: true });
       }
     }
-  }, [videoId, currentPlayingVideo, addToHistory, navigate, playlistId]);
+  }, [videoId, playlistId, addToHistory, navigate]);
+
+  // Add current video to history when page loads or videoId changes
+  useEffect(() => {
+    if (currentPlayingVideo) {
+      addToHistory(currentPlayingVideo);
+    }
+  }, [videoId]); // Only when videoId changes
 
   if (!videoId) {
     navigate('/');

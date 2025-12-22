@@ -53,16 +53,9 @@ export function YouTubePlayer({
     if (videoId !== currentVideoId) {
       setCurrentVideoId(videoId);
     }
-  }, [videoId]);
+  }, [videoId, currentVideoId]);
 
-  // Trigger onVideoPlay when currentVideoId changes (internal or external)
-  useEffect(() => {
-    if (currentVideoId) {
-      onVideoPlay?.(currentVideoId);
-    }
-  }, [currentVideoId, onVideoPlay]);
-
-  // Initialize YouTube Player
+  // Initialize YouTube Player ONCE
   useEffect(() => {
     // Load YouTube IFrame Player API code asynchronously
     if (!window.YT) {
@@ -75,7 +68,7 @@ export function YouTubePlayer({
     const initPlayer = () => {
       if (!containerRef.current) return;
 
-      // Clean up previous instance
+      // Clean up previous instance if exists
       if (playerRef.current) {
         try { playerRef.current.destroy(); } catch (e) { }
       }
@@ -99,19 +92,18 @@ export function YouTubePlayer({
             // Sync internal video ID whenever state changes (e.g. playlist advances)
             if (playerRef.current && typeof playerRef.current.getVideoData === 'function') {
               const data = playerRef.current.getVideoData();
-              if (data && data.video_id && data.video_id !== currentVideoId) {
-                // This set state will trigger the useEffect above to call onVideoPlay
-                setCurrentVideoId(data.video_id);
-              } else if (data && data.video_id && !currentVideoId) {
-                setCurrentVideoId(data.video_id);
+              const playingId = data?.video_id;
+
+              // Only update if the playing ID differs from our current state
+              if (playingId && playingId !== currentVideoId) {
+                setCurrentVideoId(playingId);
+                // Notify parent that video changed
+                onVideoPlay?.(playingId);
               }
             }
 
             // YT.PlayerState.ENDED is 0
             if (event.data === 0) {
-              // Video ended. 
-              // IMPORTANT: If in a playlist, YouTube might auto-advance. 
-              // We call onVideoEnd to give our app a chance to intervene (check queue).
               onVideoEnd?.();
             }
           }
@@ -130,11 +122,28 @@ export function YouTubePlayer({
     return () => {
       if (playerRef.current) {
         try {
-          // playerRef.current.destroy(); 
+          playerRef.current.destroy();
         } catch (e) { console.error(e); }
       }
     };
-  }, [videoId, playlistId]); // Re-init if video/playlist changes
+  }, []); // Only initialize once
+
+  // When videoId/playlistId changes externally, load new video
+  useEffect(() => {
+    if (playerRef.current && playerRef.current.loadVideoById && videoId !== currentVideoId) {
+      if (playlistId) {
+        // Load playlist
+        playerRef.current.loadPlaylist({
+          listType: 'playlist',
+          list: playlistId,
+          index: 0
+        });
+      } else {
+        // Load single video
+        playerRef.current.loadVideoById(videoId);
+      }
+    }
+  }, [videoId, playlistId, currentVideoId]);
 
   // Extract dominant color from thumbnail
   useEffect(() => {
