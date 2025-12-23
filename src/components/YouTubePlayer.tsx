@@ -393,13 +393,10 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
             setShowAddInput(false);
           }}
           title={t('directPlay')}
-          className="h-8 w-8"
+          className="h-8 w-8 relative"
         >
-          <Play className="w-4 h-4 fill-current" />
+          <Play className="w-4 h-4" />
         </Button>
-
-
-
 
         {/* Add to Queue */}
         <Button
@@ -410,7 +407,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
             setShowDirectPlayInput(false);
           }}
           title={t('addToQueue')}
-          className="h-8 w-8"
+          className="h-8 w-8 relative"
         >
           <Plus className="w-4 h-4" />
         </Button>
