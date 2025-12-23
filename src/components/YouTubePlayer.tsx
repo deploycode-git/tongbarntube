@@ -393,9 +393,9 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
             setShowAddInput(false);
           }}
           title={t('directPlay')}
-          className="h-8 w-8 relative"
+          className="h-10 w-10 relative rounded-xl bg-card/80 backdrop-blur-xl border border-border/50 text-foreground hover:bg-accent hover:text-accent-foreground shadow-sm transition-all"
         >
-          <Play className="w-4 h-4" />
+          <Play className="w-5 h-5 fill-current" />
         </Button>
 
         {/* Add to Queue */}
@@ -407,9 +407,9 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
             setShowDirectPlayInput(false);
           }}
           title={t('addToQueue')}
-          className="h-8 w-8 relative"
+          className="h-10 w-10 relative rounded-xl bg-card/80 backdrop-blur-xl border border-border/50 text-foreground hover:bg-accent hover:text-accent-foreground shadow-sm transition-all"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
         </Button>
 
         <Button
@@ -417,11 +417,11 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           size="icon"
           onClick={onOpenQueue}
           title={t('queue')}
-          className="h-8 w-8 relative"
+          className="h-10 w-10 relative rounded-xl bg-card/80 backdrop-blur-xl border border-border/50 text-foreground hover:bg-accent hover:text-accent-foreground shadow-sm transition-all"
         >
-          <ListEnd className="w-4 h-4" />
+          <ListEnd className="w-5 h-5" />
           {queueCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 text-[10px] bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 text-[10px] bg-red-600 text-white rounded-full flex items-center justify-center ring-2 ring-background">
               {queueCount}
             </span>
           )}
