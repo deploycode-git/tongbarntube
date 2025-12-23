@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { Copy, ListEnd, Plus, X } from 'lucide-react';
+import { Copy, ListEnd, Play, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getVideoThumbnail, extractVideoId } from '@/utils/youtube';
@@ -30,6 +30,7 @@ interface YouTubePlayerProps {
   t?: (key: string) => string;
   onVideoPlay?: (videoId: string) => void;
   onColorChange?: (color: string) => void;
+  onDirectPlay?: (url: string) => void;
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(({
@@ -42,6 +43,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
   t = (key) => key,
   onVideoPlay,
   onColorChange,
+  onDirectPlay,
 }, ref) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,8 +64,14 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
 
   const [showCopied, setShowCopied] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('');
-  const [showAddInput, setShowAddInput] = useState(false);
+  const [showAddInput, setShowAddInput] = useState(false); // For Queue
   const [urlInput, setUrlInput] = useState('');
+
+  const [showDirectPlayInput, setShowDirectPlayInput] = useState(false); // For Direct Play
+  const [directPlayUrl, setDirectPlayUrl] = useState('');
+
+  // Track previous playlist to detect changes
+  const prevPlaylistId = useRef<string | null | undefined>(playlistId);
 
   // Sync currentVideoId with prop when prop changes (external navigation)
   useEffect(() => {
@@ -74,6 +82,10 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
 
   // Initialize YouTube Player ONCE
   useEffect(() => {
+    // ... (keep init logic same, but maybe update ref)
+    // Actually init logic is fine.
+    // We just need to ensure on subsequent updates we handle it right.
+
     // Load YouTube IFrame Player API code asynchronously
     if (!window.YT) {
       const tag = document.createElement('script');
@@ -98,28 +110,22 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           autoplay: 1,
           rel: 0,
           modestbranding: 1,
-          listType: playlistId ? 'playlist' : undefined,
+          // listType: playlistId ? 'playlist' : undefined, // Removed per request
           list: playlistId || undefined,
         },
         events: {
           onReady: (event: any) => {
-            // Player ready
+            // ...
           },
           onStateChange: (event: any) => {
-            // Sync internal video ID whenever state changes (e.g. playlist advances)
             if (playerRef.current && typeof playerRef.current.getVideoData === 'function') {
               const data = playerRef.current.getVideoData();
               const playingId = data?.video_id;
-
-              // Only update if the playing ID differs from our current state
               if (playingId && playingId !== currentVideoId) {
                 setCurrentVideoId(playingId);
-                // Notify parent that video changed
                 onVideoPlay?.(playingId);
               }
             }
-
-            // YT.PlayerState.ENDED is 0
             if (event.data === 0) {
               onVideoEnd?.();
             }
@@ -138,27 +144,30 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
 
     return () => {
       if (playerRef.current) {
-        try {
-          playerRef.current.destroy();
-        } catch (e) { console.error(e); }
+        try { playerRef.current.destroy(); } catch (e) { console.error(e); }
       }
     };
   }, []); // Only initialize once
 
-  // When videoId/playlistId changes externally, load new video
+  // When videoId/playlistId changes externally, handle transitions intelligently
   useEffect(() => {
-    if (playerRef.current && playerRef.current.loadVideoById && videoId !== currentVideoId) {
-      if (playlistId) {
-        // Load playlist
+    if (playerRef.current && playerRef.current.loadVideoById) {
+      const playlistChanged = playlistId !== prevPlaylistId.current;
+      prevPlaylistId.current = playlistId;
+
+      if (playlistChanged && playlistId) {
+        // Case 1: New Playlist Loaded -> Load Playlist
         playerRef.current.loadPlaylist({
-          listType: 'playlist',
           list: playlistId,
-          index: 0
         });
-      } else {
-        // Load single video
+      } else if (videoId !== currentVideoId) {
+        // Case 2: Same Playlist (or no playlist), but New Video -> Just play video
+        // This prevents resetting to Index 0 when switching songs in the same list
+        // And it correctly handles Single Video -> URL change
         playerRef.current.loadVideoById(videoId);
       }
+      // Note: If playlist changed to NULL, do we need to clear it?
+      // loadVideoById normally handles single video playback fine.
     }
   }, [videoId, playlistId, currentVideoId]);
 
@@ -301,11 +310,31 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           </Button>
         </div>
 
+        {/* Direct Play */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setShowDirectPlayInput(!showDirectPlayInput);
+            setShowAddInput(false);
+          }}
+          title="Direct Play"
+          className="h-8 w-8"
+        >
+          <Play className="w-4 h-4 fill-current" />
+        </Button>
+
+
+
+
         {/* Add to Queue */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setShowAddInput(!showAddInput)}
+          onClick={() => {
+            setShowAddInput(!showAddInput);
+            setShowDirectPlayInput(false);
+          }}
           title={t('addToQueue')}
           className="h-8 w-8"
         >
@@ -328,22 +357,74 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         </Button>
       </div>
 
+      {/* Direct Play Input */}
+      {showDirectPlayInput && (
+        <div className="mt-3 flex items-center gap-3 animate-in slide-in-from-top-2 duration-200">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Paste YouTube URL to play..."
+              value={directPlayUrl}
+              onChange={(e) => setDirectPlayUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && directPlayUrl.trim()) {
+                  onDirectPlay?.(directPlayUrl);
+                  setDirectPlayUrl('');
+                  setShowDirectPlayInput(false);
+                }
+              }}
+              className="w-full h-10 pl-3 pr-8 rounded-lg bg-card/50 border-white/10 focus-visible:ring-primary/20 shadow-sm backdrop-blur-sm"
+              autoFocus
+            />
+            <button
+              onClick={() => { setShowDirectPlayInput(false); setDirectPlayUrl(''); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <Button
+            className="h-10 px-6 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow-md transition-all hover:scale-105 active:scale-95"
+            onClick={() => {
+              if (directPlayUrl.trim()) {
+                onDirectPlay?.(directPlayUrl);
+                setDirectPlayUrl('');
+                setShowDirectPlayInput(false);
+              }
+            }}
+            disabled={!directPlayUrl.trim()}
+          >
+            Play
+            <Play className="w-4 h-4 fill-current ml-2" />
+          </Button>
+        </div>
+      )}
+
       {/* Add to Queue Input */}
       {showAddInput && (
-        <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-card/80 backdrop-blur-xl border border-border/50">
-          <Input
-            placeholder={t('pasteUrl')}
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddToQueue()}
-            className="flex-1 h-8 text-sm"
-            autoFocus
-          />
-          <Button size="sm" className="h-8" onClick={handleAddToQueue} disabled={!urlInput.trim()}>
-            <Plus className="w-4 h-4" />
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8" onClick={() => { setShowAddInput(false); setUrlInput(''); }}>
-            <X className="w-4 h-4" />
+        <div className="mt-3 flex items-center gap-3 animate-in slide-in-from-top-2 duration-200">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Paste YouTube URL to play directly..."
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddToQueue()}
+              className="w-full h-10 pl-3 pr-8 rounded-lg bg-card/50 border-white/10 focus-visible:ring-primary/20 shadow-sm backdrop-blur-sm"
+              autoFocus
+            />
+            <button
+              onClick={() => { setShowAddInput(false); setUrlInput(''); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <Button
+            className="h-10 px-6 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow-md transition-all hover:scale-105 active:scale-95"
+            onClick={handleAddToQueue}
+            disabled={!urlInput.trim()}
+          >
+            Play
+            <Play className="w-4 h-4 fill-current ml-2" />
           </Button>
         </div>
       )}
