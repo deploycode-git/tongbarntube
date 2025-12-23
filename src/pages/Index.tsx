@@ -200,11 +200,59 @@ export default function Index() {
       )}
 
       {/* Footer */}
-      <footer className="py-8 px-4 border-t border-border/50">
-        <div className="container max-w-6xl mx-auto text-center text-muted-foreground text-sm">
-          <p>TongbarnTube • {t('tagline')}</p>
+      {/* Footer */}
+      <footer className="relative mt-20 border-t border-border/40 overflow-hidden">
+        {/* background layers */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/60" />
+
+        {/* Enhanced Ambient Light for Dark Mode */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,var(--primary)/0.15,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_bottom,var(--primary)/0.3,transparent_80%)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary/10 to-transparent dark:from-primary/20 pointer-events-none" />
+
+        <div className="relative w-full">
+          <div className="container max-w-7xl mx-auto px-4 py-16">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 w-full">
+
+              {/* Decorative Image (LEFT) - Contained & Big */}
+              <div className="hidden lg:block absolute -bottom-24 -left-10 opacity-90 dark:opacity-80 pointer-events-none select-none z-0">
+                <img
+                  src="/o1.png"
+                  alt=""
+                  className="h-[350px] w-auto object-contain drop-shadow-2xl"
+                />
+              </div>
+
+              {/* Text Content (CENTER) */}
+              <div className="flex-1 text-center md:text-center z-10 w-full relative flex flex-col items-center">
+                {/* Logo */}
+                <div className="inline-flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                    <Play className="w-5 h-5 text-primary-foreground fill-primary-foreground ml-0.5" />
+                  </div>
+                  <h1 className="text-3xl font-bold tracking-tight text-foreground/90 drop-shadow-lg">
+                    Tongbarn<span className="text-gradient drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]">Tube</span>
+                  </h1>
+                </div>
+
+                <p className="text-xs text-muted-foreground/60 tracking-wider uppercase">
+                  © {new Date().getFullYear()} All rights reserved
+                </p>
+              </div>
+
+              {/* Decorative Image (RIGHT) - Contained & Big */}
+              <div className="hidden lg:block absolute -bottom-24 -right-10 opacity-90 dark:opacity-80 pointer-events-none select-none z-0">
+                <img
+                  src="/o1.png"
+                  alt=""
+                  className="h-[350px] w-auto object-contain drop-shadow-2xl scale-x-[-1]"
+                />
+              </div>
+
+            </div>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }

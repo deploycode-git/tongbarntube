@@ -21,7 +21,7 @@ export default function Watch() {
   const playlistId = searchParams.get('list');
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const { history, addToHistory } = useHistory();
+  const { history, addToHistory, removeFromHistory } = useHistory();
   const { language, toggleLanguage, t } = useLanguage();
   const {
     queue,
@@ -266,6 +266,8 @@ export default function Watch() {
                         }
                         goToVideo(item.id);
                       }}
+                      showRemove
+                      onRemove={() => removeFromHistory(item.id)}
                     />
                   ))}
               </div>
