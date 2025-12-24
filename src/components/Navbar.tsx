@@ -89,7 +89,7 @@ export function Navbar({ theme, toggleTheme, language, toggleLanguage, t, autoHi
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-all duration-300 group-hover:scale-105">
                 <Play className="w-3.5 h-3.5 text-primary-foreground fill-primary-foreground ml-0.5" />
               </div>
-              <span className="text-lg font-semibold tracking-tight hidden sm:inline">
+              <span className="text-lg font-semibold tracking-tight">
                 Tongbarn<span className="text-primary">Tube</span>
               </span>
             </Link>
