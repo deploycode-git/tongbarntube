@@ -244,7 +244,7 @@ export default function Watch() {
               // Theater Mode: Wide but limited by viewport height
               // Expands to 98vw or height-based limit, whichever is smaller
               maxWidth: theaterMode
-                ? 'min(98vw, calc((100vh - 20px) * 1.778))'
+                ? 'min(98vw, calc((100vh - 27px) * 1.778))'
                 : '100%'
             }}
           >
