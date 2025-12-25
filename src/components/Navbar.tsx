@@ -76,7 +76,7 @@ export function Navbar({ theme, toggleTheme, language, toggleLanguage, t, autoHi
           "fixed top-2 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out origin-top",
           showNavbar ? "translate-y-0 opacity-100 scale-y-100" : "-translate-y-full opacity-0 scale-y-0",
           "w-[95%] max-w-2xl rounded-2xl",
-          "glass-premium border border-white/10 shadow-2xl shadow-primary/10"
+          "bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/10 shadow-2xl shadow-primary/10 supports-[backdrop-filter]:bg-white/10 supports-[backdrop-filter]:dark:bg-black/20"
         )}
         onMouseEnter={() => autoHide && setIsHovered(true)}
         onMouseLeave={() => autoHide && setIsHovered(false)}
@@ -157,7 +157,7 @@ export function Navbar({ theme, toggleTheme, language, toggleLanguage, t, autoHi
       </nav>
 
       {/* Spacer */}
-      <div className="h-14" />
+      {!autoHide && <div className="h-14" />}
     </>
   );
 }

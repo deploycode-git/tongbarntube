@@ -4,6 +4,7 @@ import { Play, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { YouTubePlayer, YouTubePlayerHandle } from '@/components/YouTubePlayer';
+import { cn } from '@/lib/utils';
 import { Navbar } from '@/components/Navbar';
 import { QueuePanel } from '@/components/QueuePanel';
 import { VideoCard } from '@/components/VideoCard';
@@ -34,6 +35,7 @@ export default function Watch() {
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('');
+  const [theaterMode, setTheaterMode] = useState(false);
 
   // Ref to control the player imperatively (bypasses update lag)
   const playerControlRef = useRef<YouTubePlayerHandle>(null);
@@ -228,11 +230,23 @@ export default function Watch() {
           autoHide // Enable auto-hide for Watch page
         />
 
-        <main className="container max-w-7xl mx-auto px-4 py-6">
+        <main className={cn(
+          "transition-all duration-700 ease-in-out mx-auto flex flex-col items-center",
+          theaterMode ? "w-[96vw] pt-12 pb-6" : "container px-4 max-w-7xl py-6"
+        )}>
           {/* Player */}
           <div
-            className="mb-4 opacity-0 animate-fade-in mx-auto w-full"
-            style={{ maxWidth: 'calc((100vh - 140px) * 1.777)' }}
+            className={cn(
+              "mb-4 mx-auto w-full transition-all duration-700 ease-in-out",
+              theaterMode ? "animate-theater-enter" : "animate-normal-enter"
+            )}
+            style={{
+              // Smart Sizing: Use 96vw width normally, but if that makes the video too tall (overflowing height),
+              // limit width based on available height (Height * 16/9 aspect ratio)
+              maxWidth: theaterMode
+                ? 'min(96vw, calc((100vh - 120px) * 1.778))'
+                : '100%'
+            }}
           >
             <YouTubePlayer
               ref={playerControlRef}
@@ -247,6 +261,8 @@ export default function Watch() {
               t={t}
               onColorChange={setDominantColor}
               onVideoPlay={handlePlayerVideoPlay}
+              isTheaterMode={theaterMode}
+              onToggleTheater={() => setTheaterMode(prev => !prev)}
             />
           </div>
 

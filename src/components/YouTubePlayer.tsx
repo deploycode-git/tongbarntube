@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { Copy, ListEnd, Play, Plus, X, Check } from 'lucide-react';
+import { Copy, ListEnd, Play, Plus, X, Check, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getVideoThumbnail, extractVideoId } from '@/utils/youtube';
@@ -34,6 +34,8 @@ interface YouTubePlayerProps {
   onVideoPlay?: (videoId: string) => void;
   onColorChange?: (color: string) => void;
   onDirectPlay?: (url: string) => void;
+  isTheaterMode?: boolean;
+  onToggleTheater?: () => void;
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(({
@@ -47,6 +49,8 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
   onVideoPlay,
   onColorChange,
   onDirectPlay,
+  isTheaterMode,
+  onToggleTheater,
 }, ref) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -458,6 +462,17 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
               {queueCount}
             </span>
           )}
+        </Button>
+
+        {/* Theater Mode Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleTheater}
+          title={isTheaterMode ? t('exitTheaterMode') : t('enterTheaterMode')}
+          className="h-10 w-10 relative rounded-xl bg-card/80 backdrop-blur-xl border border-border/50 text-foreground hover:bg-accent hover:text-accent-foreground shadow-sm transition-all"
+        >
+          {isTheaterMode ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
         </Button>
       </div>
 

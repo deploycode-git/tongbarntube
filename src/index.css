@@ -366,3 +366,46 @@
     radial-gradient(at 50% 100%, hsla(220, 70%, 60%, 0.05) 0, transparent 50%),
     radial-gradient(at 100% 0%, hsla(339, 49%, 60%, 0.03) 0, transparent 50%);
 }
+
+/* =========================
+   THEATER LAYOUT (Stable)
+========================= */
+.theater-wrapper {
+  width: 100vw !important;
+  margin-left: calc(50% - 50vw);
+}
+
+/* =========================
+   NORMAL LOAD ANIMATION
+========================= */
+@keyframes normal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-normal-enter {
+  animation: normal-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* =========================
+   THEATER EXPAND ANIMATION
+========================= */
+@keyframes theater-enter {
+  from {
+    transform: scale(0.97);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-theater-enter {
+  animation: theater-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform;
+}
